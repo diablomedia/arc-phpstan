@@ -71,10 +71,11 @@ To use the linter you must register it in your `.arclint` file, as in this examp
   "linters": {
     "phpstan": {
       "type": "phpstan",
-      "include": "(\\.php$)",
+      "include": "(\\.php$)", /* optional, if arc chooses to lint any files, phpstan run will be triggered */
       "config": "var/build/phpstan.neon", /* optional */
       "bin": "vendor/bin/phpstan", /* optional */
-      "level": 0 /* optional */
+      "level": 0, /* optional */
+      "paths": "./" /* optional */
     }
   }
 }

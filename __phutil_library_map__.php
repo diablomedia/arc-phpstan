@@ -13,6 +13,6 @@ phutil_register_library_map(array(
   ),
   'function' => array(),
   'xmap' => array(
-    'PhpstanLinter' => 'ArcanistExternalLinter',
+    'PhpstanLinter' => 'ArcanistLinter',
   ),
 ));
