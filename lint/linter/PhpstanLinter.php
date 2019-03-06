@@ -51,7 +51,7 @@ final class PhpstanLinter extends ArcanistLinter
     /**
      * @var string Rule level
      */
-    private $level = 'max';
+    private $level = null;
 
     /**
      * @var string Autoload file path
@@ -151,13 +151,23 @@ final class PhpstanLinter extends ArcanistLinter
         $flags = array(
             'analyse',
             '--no-progress',
-            '--errorFormat=checkstyle'
         );
+        
+        $phpstanVersion = $this->getVersion();
+        
+        if (version_compare('0.11', $phpstanVersion) <= 0) {
+            array_push($flags, '--error-format=checkstyle');
+        } else {
+            array_push($flags, '--errorFormat=checkstyle');
+        }
+        
         if (null !== $this->configFile) {
             array_push($flags, '-c', $this->configFile);
         }
         if (null !== $this->level) {
             array_push($flags, '-l', $this->level);
+        } elseif (version_compare('0.11', $phpstanVersion) > 0) {
+            array_push($flags, '-l', 'max');
         }
         if (null !== $this->autoloadFile) {
             array_push($flags, '-a', $this->autoloadFile);
@@ -178,7 +188,9 @@ final class PhpstanLinter extends ArcanistLinter
             'level' => array(
                 'type' => 'optional int',
                 'help' => pht(
-                    'Rule level used (0 loosest - max strictest). Will be provided as -l <level> to phpstan.'
+                    'Rule level used (0 loosest - max strictest). Will be provided as -l <level> to phpstan if' .
+                    ' present, otherwise relies on what is specified in the phpstan config (if using phpstan 0.11 or' .
+                    ' higher, defaults to "max" in older versions of phpstan).'
                 ),
             ),
             'autoload' => array(
@@ -397,5 +409,17 @@ final class PhpstanLinter extends ArcanistLinter
         }
 
         return ArcanistLintSeverity::SEVERITY_ERROR;
+    }
+    
+    /**
+     * Get the composed executable command, including the interpreter and binary
+     * but without flags or paths. This can be used to execute `--version`
+     * commands.
+     *
+     * @return string Command to execute the raw linter.
+     * @task exec
+     */
+    final protected function getExecutableCommand() {
+        return $this->bin;
     }
 }
