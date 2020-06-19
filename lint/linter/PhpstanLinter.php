@@ -31,7 +31,7 @@ final class PhpstanLinter extends ArcanistLinter
     /**
      * @var array Paths passed to phpstan command (provided by lint config)
      */
-    protected $phpstanPaths = array('./');
+    protected $phpstanPaths = array();
 
     /**
      * @var string Phpstan binary to execute (optionally provided via config)
@@ -58,17 +58,33 @@ final class PhpstanLinter extends ArcanistLinter
      */
     private $autoloadFile = null;
 
+    /**
+     * @var string|null|false The version of the phpstan executable if available (null = not set yet, false = can't get version)
+     */
+    private $phpstanVersion = null;
+
     public function willLintPaths(array $paths) {
         // Prevent double processing since we really only need to run phpstan once per lint run
         if ($this->processing === false) {
             $this->processing = true;
+
+            $phpstanVersion = $this->getVersion();
 
             $flags = array_merge($this->getMandatoryFlags(), nonempty($this->flags, $this->getDefaultFlags()));
 
             $bin = csprintf('%s', $this->bin);
             $bin = csprintf('%C %Ls', $bin, $flags);
 
-            $future = new ExecFuture('%C %C', $bin, implode(' ', $this->phpstanPaths));
+            if (empty($this->phpstanPaths)) {
+                if (version_compare('0.11', $phpstanVersion) > 0) {
+                    $paths = './';
+                } else {
+                    $paths = '';
+                }
+            } else {
+                $paths = implode(' ', $this->phpstanPaths);
+            }
+            $future = new ExecFuture('%C %C', $bin, $paths);
             $future->setCWD($this->getProjectRoot());
 
             list($err, $stdout, $stderr) = $future->resolve();
@@ -135,15 +151,19 @@ final class PhpstanLinter extends ArcanistLinter
 
     public function getVersion()
     {
-        list($stdout) = execx('%C --version', $this->getExecutableCommand());
+        if ($this->phpstanVersion === null) {
+            list($stdout) = execx('%C --version', $this->getExecutableCommand());
 
-        $matches = array();
-        $regex = '/(?P<version>\d+\.\d+\.\d+)/';
-        if (preg_match($regex, $stdout, $matches)) {
-            return $matches['version'];
-        } else {
-            return false;
+            $matches = array();
+            $regex = '/(?P<version>\d+\.\d+\.\d+)/';
+            if (preg_match($regex, $stdout, $matches)) {
+                $this->phpstanVersion = $matches['version'];
+            } else {
+                $this->phpstanVersion = false;
+            }
         }
+
+        return $this->phpstanVersion;
     }
 
     protected function getMandatoryFlags()
@@ -152,15 +172,15 @@ final class PhpstanLinter extends ArcanistLinter
             'analyse',
             '--no-progress',
         );
-        
+
         $phpstanVersion = $this->getVersion();
-        
+
         if (version_compare('0.11', $phpstanVersion) <= 0) {
             array_push($flags, '--error-format=checkstyle');
         } else {
             array_push($flags, '--errorFormat=checkstyle');
         }
-        
+
         if (null !== $this->configFile) {
             array_push($flags, '-c', $this->configFile);
         }
@@ -209,7 +229,7 @@ final class PhpstanLinter extends ArcanistLinter
             'paths' => array(
                 'type' => 'optional string | list<string>',
                 'help' => pht(
-                    'The path(s) that phpstan should analyze (defaults to "./", relative to project root).'
+                    'The path(s) that phpstan should analyze (defaults to value in phpstan config, only provide to override).'
                 )
             ),
             'flags' => array(
@@ -410,7 +430,7 @@ final class PhpstanLinter extends ArcanistLinter
 
         return ArcanistLintSeverity::SEVERITY_ERROR;
     }
-    
+
     /**
      * Get the composed executable command, including the interpreter and binary
      * but without flags or paths. This can be used to execute `--version`
