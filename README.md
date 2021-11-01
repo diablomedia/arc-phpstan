@@ -1,3 +1,5 @@
+![OSSAR](https://github.com/appsinet/arc-phpstan/workflows/OSSAR/badge.svg)
+
 Based on [material-foundation/arc-tslint](https://github.com/material-foundation/arc-tslint) and some improvements made in [sascha-egerer/arc-phpstan](https://github.com/sascha-egerer/arc-phpstan). Provides basic support for `arc lint` to execute `phpstan`.
 
 # arc-phpstan
@@ -74,7 +76,7 @@ To use the linter you must register it in your `.arclint` file, as in this examp
       "include": "(\\.php$)", /* optional, if arc chooses to lint any files, phpstan run will be triggered */
       "config": "var/build/phpstan.neon", /* optional */
       "bin": "vendor/bin/phpstan", /* optional */
-      "level": 0, /* optional */
+      "level": "0", /* optional */
       "paths": "./" /* optional */
     }
   }

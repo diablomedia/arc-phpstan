@@ -63,7 +63,8 @@ final class PhpstanLinter extends ArcanistLinter
      */
     private $phpstanVersion = null;
 
-    public function willLintPaths(array $paths) {
+    public function willLintPaths(array $paths)
+    {
         // Prevent double processing since we really only need to run phpstan once per lint run
         if ($this->processing === false) {
             $this->processing = true;
@@ -171,6 +172,7 @@ final class PhpstanLinter extends ArcanistLinter
         $flags = array(
             'analyse',
             '--no-progress',
+            '--error-format=checkstyle'
         );
 
         $phpstanVersion = $this->getVersion();
@@ -206,7 +208,7 @@ final class PhpstanLinter extends ArcanistLinter
                 ),
             ),
             'level' => array(
-                'type' => 'optional int',
+                'type' => 'optional string',
                 'help' => pht(
                     'Rule level used (0 loosest - max strictest). Will be provided as -l <level> to phpstan if' .
                     ' present, otherwise relies on what is specified in the phpstan config (if using phpstan 0.11 or' .
@@ -216,15 +218,17 @@ final class PhpstanLinter extends ArcanistLinter
             'autoload' => array(
                 'type' => 'optional string',
                 'help' => pht(
-                    'The path to the auto load file. Will be provided as -a <autoload_file> to phpstan.'),
+                    'The path to the auto load file. Will be provided as -a <autoload_file> to phpstan.'
+                ),
             ),
             'bin' => array(
                 'type' => 'optional string | list<string>',
                 'help' => pht(
-                  'Specify a string (or list of strings) identifying the binary '.
+                    'Specify a string (or list of strings) identifying the binary '.
                   'which should be invoked to execute this linter. This overrides '.
                   'the default binary. If you provide a list of possible binaries, '.
-                  'the first one which exists will be used.'),
+                  'the first one which exists will be used.'
+                ),
             ),
             'paths' => array(
                 'type' => 'optional string | list<string>',
@@ -235,15 +239,17 @@ final class PhpstanLinter extends ArcanistLinter
             'flags' => array(
                 'type' => 'optional list<string>',
                 'help' => pht(
-                  'Provide a list of additional flags to pass to the linter on the '.
-                  'command line.'),
+                    'Provide a list of additional flags to pass to the linter on the '.
+                  'command line.'
+                ),
             ),
             'version' => array(
                 'type' => 'optional string',
                 'help' => pht(
-                  'Specify a version requirement for the binary. The version number '.
+                    'Specify a version requirement for the binary. The version number '.
                   'may be prefixed with <, <=, >, >=, or = to specify the version '.
-                  'comparison operator (default: =).'),
+                  'comparison operator (default: =).'
+                ),
             ),
         );
 
@@ -257,7 +263,8 @@ final class PhpstanLinter extends ArcanistLinter
      * @return $this
      * @task bin
      */
-    final public function setBinary($bin) {
+    final public function setBinary($bin)
+    {
         $this->bin = $bin;
 
         return $this;
@@ -271,7 +278,8 @@ final class PhpstanLinter extends ArcanistLinter
      * @return this
      * @task bin
      */
-    final public function setFlags(array $flags) {
+    final public function setFlags(array $flags)
+    {
         $this->flags = $flags;
 
         return $this;
@@ -288,8 +296,9 @@ final class PhpstanLinter extends ArcanistLinter
      * @return list<string>  Overridable default flags.
      * @task bin
      */
-    protected function getDefaultFlags() {
-         return array();
+    protected function getDefaultFlags()
+    {
+        return array();
     }
 
     public function setLinterConfigurationValue($key, $value)
@@ -326,7 +335,8 @@ final class PhpstanLinter extends ArcanistLinter
                     }
                 }
                 throw new Exception(
-                    pht('None of the configured binaries can be located.'));
+                    pht('None of the configured binaries can be located.')
+                );
             default:
                 parent::setLinterConfigurationValue($key, $value);
                 return;
@@ -344,7 +354,7 @@ final class PhpstanLinter extends ArcanistLinter
             $stdout = substr($stdout, strpos($stdout, '<?xml'));
             $checkstyleOutput = new SimpleXMLElement($stdout);
             $files = $checkstyleOutput->xpath('//file');
-            foreach($files as $file) {
+            foreach ($files as $file) {
                 $path = str_replace($this->getProjectRoot() . '/', '', $file['name']);
                 $error = $file->error;
                 if (!isset($this->results[$path])) {
@@ -439,7 +449,8 @@ final class PhpstanLinter extends ArcanistLinter
      * @return string Command to execute the raw linter.
      * @task exec
      */
-    final protected function getExecutableCommand() {
+    final protected function getExecutableCommand()
+    {
         return $this->bin;
     }
 }
