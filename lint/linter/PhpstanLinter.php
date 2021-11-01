@@ -172,7 +172,6 @@ final class PhpstanLinter extends ArcanistLinter
         $flags = array(
             'analyse',
             '--no-progress',
-            '--error-format=checkstyle'
         );
 
         $phpstanVersion = $this->getVersion();
